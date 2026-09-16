@@ -7,7 +7,9 @@ import {
   Compass, 
   MapPin, 
   MessageCircle, 
-  RefreshCw
+  RefreshCw,
+  Users,
+  SlidersHorizontal
 } from 'lucide-react';
 import { OtherUserProfileModal } from './OtherUserProfileModal';
 
@@ -65,6 +67,9 @@ export const NearbyView: React.FC<NearbyViewProps> = ({ onStartChat }) => {
     fetchNearby();
   }, [user, userProfile]);
 
+  const femaleCount = users.filter((u) => u.gender === 'female').length;
+  const maleCount = users.filter((u) => u.gender === 'male').length;
+
   const filteredUsers = users.filter((u) => {
     if (genderFilter === 'all') return true;
     return u.gender === genderFilter;
@@ -82,43 +87,79 @@ export const NearbyView: React.FC<NearbyViewProps> = ({ onStartChat }) => {
   return (
     <div className="flex flex-col h-full bg-slate-50">
       {/* Sub-header controls */}
-      <div className="bg-white px-4 py-2.5 border-b border-slate-200/80 flex items-center justify-between shrink-0 shadow-2xs">
-        <div className="flex items-center gap-1.5 text-xs text-slate-600">
-          <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
-          <span className="font-semibold text-slate-700 truncate max-w-[120px]">{userProfile?.region || 'Sekitar Saya'}</span>
-          <span className="text-[10px] text-slate-400">({filteredUsers.length})</span>
-        </div>
-
-        <div className="flex items-center gap-1.5">
-          {/* Gender Filter buttons */}
-          <div className="flex bg-slate-100 p-0.5 rounded-lg text-[11px]">
-            <button
-              onClick={() => setGenderFilter('all')}
-              className={`px-2 py-0.5 rounded-md font-medium transition ${genderFilter === 'all' ? 'bg-white text-emerald-700 shadow-2xs' : 'text-slate-500'}`}
-            >
-              Semua
-            </button>
-            <button
-              onClick={() => setGenderFilter('female')}
-              className={`px-2 py-0.5 rounded-md font-medium transition ${genderFilter === 'female' ? 'bg-white text-pink-600 shadow-2xs' : 'text-slate-500'}`}
-            >
-              Perempuan
-            </button>
-            <button
-              onClick={() => setGenderFilter('male')}
-              className={`px-2 py-0.5 rounded-md font-medium transition ${genderFilter === 'male' ? 'bg-white text-blue-600 shadow-2xs' : 'text-slate-500'}`}
-            >
-              Pria
-            </button>
+      <div className="bg-white px-4 py-2.5 border-b border-slate-200/80 shrink-0 shadow-2xs space-y-2">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1.5 text-xs text-slate-600">
+            <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+            <span className="font-semibold text-slate-800 truncate max-w-[140px]">{userProfile?.region || 'Sekitar Saya'}</span>
+            <span className="text-[11px] font-medium text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full">
+              {filteredUsers.length} ditemukan
+            </span>
           </div>
 
           <button
             onClick={fetchNearby}
-            className="p-1 text-slate-400 hover:text-emerald-600 rounded-md transition"
+            className="p-1.5 text-slate-500 hover:text-emerald-600 hover:bg-slate-100 rounded-lg transition flex items-center gap-1 text-xs"
             title="Pindai Ulang Radar"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-emerald-600' : ''}`} />
+            <span className="text-[11px] font-medium hidden sm:inline">Pindai</span>
           </button>
+        </div>
+
+        {/* Gender Filter Buttons: Keduanya, Perempuan, Laki-laki */}
+        <div className="flex items-center justify-between gap-2 pt-0.5">
+          <div className="flex items-center gap-1 text-[11px] text-slate-500 font-semibold shrink-0">
+            <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
+            <span>Filter:</span>
+          </div>
+
+          <div className="flex bg-slate-100/90 p-1 rounded-xl text-xs gap-1 flex-1 max-w-sm justify-end">
+            <button
+              type="button"
+              id="filter-gender-all"
+              onClick={() => setGenderFilter('all')}
+              className={`flex-1 py-1 px-2.5 rounded-lg font-semibold text-center transition flex items-center justify-center gap-1 text-[11px] ${
+                genderFilter === 'all'
+                  ? 'bg-white text-emerald-700 shadow-xs border border-slate-200/70'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-3.5 h-3.5 text-emerald-600" />
+              <span>Keduanya</span>
+              <span className="text-[10px] text-slate-400 font-normal">({users.length})</span>
+            </button>
+
+            <button
+              type="button"
+              id="filter-gender-female"
+              onClick={() => setGenderFilter('female')}
+              className={`flex-1 py-1 px-2.5 rounded-lg font-semibold text-center transition flex items-center justify-center gap-1 text-[11px] ${
+                genderFilter === 'female'
+                  ? 'bg-pink-50 text-pink-700 shadow-xs border border-pink-200'
+                  : 'text-slate-600 hover:text-pink-600'
+              }`}
+            >
+              <span className="text-pink-600 font-bold text-xs">♀</span>
+              <span>Perempuan</span>
+              <span className="text-[10px] text-pink-400 font-normal">({femaleCount})</span>
+            </button>
+
+            <button
+              type="button"
+              id="filter-gender-male"
+              onClick={() => setGenderFilter('male')}
+              className={`flex-1 py-1 px-2.5 rounded-lg font-semibold text-center transition flex items-center justify-center gap-1 text-[11px] ${
+                genderFilter === 'male'
+                  ? 'bg-blue-50 text-blue-700 shadow-xs border border-blue-200'
+                  : 'text-slate-600 hover:text-blue-600'
+              }`}
+            >
+              <span className="text-blue-600 font-bold text-xs">♂</span>
+              <span>Laki-laki</span>
+              <span className="text-[10px] text-blue-400 font-normal">({maleCount})</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -135,17 +176,34 @@ export const NearbyView: React.FC<NearbyViewProps> = ({ onStartChat }) => {
               <Compass className="w-8 h-8 animate-pulse" />
             </div>
             <div>
-              <p className="text-xs font-bold text-slate-700">Belum Ada Pengguna Lain di Sekitar</p>
+              <p className="text-xs font-bold text-slate-700">
+                {users.length > 0
+                  ? `Tidak Ditemukan Pengguna ${genderFilter === 'female' ? 'Perempuan' : 'Laki-laki'}`
+                  : 'Belum Ada Pengguna Lain di Sekitar'}
+              </p>
               <p className="text-[11px] text-slate-400 max-w-xs mx-auto mt-1 leading-relaxed">
-                Belum ada pengguna lain yang aktif di area ini. Bagikan tautan aplikasi agar teman Anda dapat langsung bergabung di radar!
+                {users.length > 0
+                  ? `Tidak ada pengguna ${genderFilter === 'female' ? 'perempuan' : 'laki-laki'} di area ini saat ini. Anda bisa mengganti filter ke "Keduanya" untuk melihat semua orang.`
+                  : 'Belum ada pengguna lain yang aktif di area ini. Bagikan tautan aplikasi agar teman Anda dapat langsung bergabung di radar!'}
               </p>
             </div>
-            <button
-              onClick={fetchNearby}
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
-            >
-              Pindai Ulang Radar
-            </button>
+            {users.length > 0 && genderFilter !== 'all' ? (
+              <button
+                type="button"
+                onClick={() => setGenderFilter('all')}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
+              >
+                Tampilkan Keduanya ({users.length})
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={fetchNearby}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-xl shadow-xs transition"
+              >
+                Pindai Ulang Radar
+              </button>
+            )}
           </div>
         ) : (
           filteredUsers.map((item) => (

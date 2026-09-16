@@ -336,6 +336,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         localStorage.setItem('michat_active_user', JSON.stringify(profile));
         localStorage.setItem(`michat_profile_${profile.uid}`, JSON.stringify(profile));
+        localStorage.setItem('lovy_just_google_logged_in', 'true');
         addSavedAccount({
           email: profile.email,
           displayName: profile.displayName,

@@ -11,6 +11,7 @@ import { ChatConversation, UserProfile } from './types';
 import { api } from './lib/api';
 import { LovyChatIcon } from './components/LovyChatIcon';
 import { RefreshCw, UserCheck, ArrowRight } from 'lucide-react';
+import { InitialProfileSetupModal } from './components/InitialProfileSetupModal';
 
 function MainApp() {
   const { user, userProfile, loading, bypassLoading } = useAuth();
@@ -19,6 +20,7 @@ function MainApp() {
   const [discoverSubView, setDiscoverSubView] = useState<'menu' | 'bottle' | 'nearby' | 'moments'>('menu');
   const [totalUnread, setTotalUnread] = useState(0);
   const [showSlowNotice, setShowSlowNotice] = useState(true);
+  const [showProfileSetup, setShowProfileSetup] = useState(false);
 
   // Monitor loading timeout
   useEffect(() => {
@@ -26,6 +28,21 @@ function MainApp() {
       setShowSlowNotice(false);
     }
   }, [loading]);
+
+  // Check if newly logged in via Google or needs initial gender & profile setup
+  useEffect(() => {
+    if (!user || !userProfile) return;
+
+    try {
+      const hasConfirmedGender = localStorage.getItem(`lovy_gender_confirmed_${userProfile.uid}`);
+      const justLoggedInGoogle = localStorage.getItem('lovy_just_google_logged_in');
+
+      // If user hasn't explicitly confirmed gender or just signed in with Google, prompt setup modal
+      if (!hasConfirmedGender || justLoggedInGoogle === 'true') {
+        setShowProfileSetup(true);
+      }
+    } catch (e) {}
+  }, [user, userProfile]);
 
   // Monitor total unread badge for the current user
   useEffect(() => {
@@ -246,6 +263,12 @@ function MainApp() {
             />
           </div>
         )}
+
+        {/* Initial Profile & Gender Setup Modal (Appears right after Google login / for new profiles) */}
+        <InitialProfileSetupModal
+          isOpen={showProfileSetup}
+          onComplete={() => setShowProfileSetup(false)}
+        />
       </div>
     </div>
   );
