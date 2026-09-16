@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Squircle Gradient -->
+    <linearGradient id="bgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00D285" />
+      <stop offset="35%" stop-color="#00BA71" />
+      <stop offset="70%" stop-color="#019154" />
+      <stop offset="100%" stop-color="#016238" />
+    </linearGradient>
+
+    <!-- Gloss Highlight Gradient -->
+    <linearGradient id="glossGrad" x1="0%" y1="0%" x2="60%" y2="100%">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.35" />
+      <stop offset="50%" stop-color="#FFFFFF" stop-opacity="0.12" />
+      <stop offset="100%" stop-color="#FFFFFF" stop-opacity="0" />
+    </linearGradient>
+
+    <!-- Heart Gradient -->
+    <linearGradient id="heartGrad" x1="20%" y1="10%" x2="80%" y2="90%">
+      <stop offset="0%" stop-color="#027D4C" />
+      <stop offset="50%" stop-color="#015D37" />
+      <stop offset="100%" stop-color="#014327" />
+    </linearGradient>
+
+    <!-- Bubble Shadow -->
+    <filter id="bubbleDropShadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#013A20" flood-opacity="0.32" />
+    </filter>
+
+    <!-- Heart Inner/Drop Shadow -->
+    <filter id="heartShadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="4" stdDeviation="6" flood-color="#012B18" flood-opacity="0.25" />
+    </filter>
+
+    <!-- Squircle Clip -->
+    <clipPath id="squircleClip">
+      <rect x="12" y="12" width="488" height="488" rx="118" ry="118" />
+    </clipPath>
+  </defs>
+
+  <!-- Main Squircle Background -->
+  <rect x="12" y="12" width="488" height="488" rx="118" ry="118" fill="url(#bgGrad)" />
+
+  <!-- Diagonal Gloss Reflection across top and side (Clipped to Squircle) -->
+  <g clip-path="url(#squircleClip)">
+    <path d="M 0 0 L 512 0 L 512 160 C 370 170 210 240 100 370 C 50 430 20 480 0 512 Z" fill="url(#glossGrad)" />
+    <!-- Secondary subtle rim ambient highlight -->
+    <path d="M 12 120 C 12 50 50 12 120 12 L 392 12 C 430 12 460 30 480 60 C 370 60 220 120 120 240 C 60 310 25 410 12 480 Z" fill="#FFFFFF" opacity="0.08" />
+  </g>
+
+  <!-- Sparkles / 4-Point Stars -->
+  <!-- Top Right Sparkle -->
+  <g transform="translate(440, 105)">
+    <path d="M 0 -18 Q 0 0 18 0 Q 0 0 0 18 Q 0 0 -18 0 Q 0 0 0 -18 Z" fill="#E2FFF0" opacity="0.85" />
+  </g>
+  <!-- Lower Left Sparkle -->
+  <g transform="translate(85, 345)">
+    <path d="M 0 -12 Q 0 0 12 0 Q 0 0 0 12 Q 0 0 -12 0 Q 0 0 0 -12 Z" fill="#E2FFF0" opacity="0.8" />
+  </g>
+  <!-- Tiny Sparkle Lower Right near chat -->
+  <g transform="translate(450, 442)">
+    <path d="M 0 -11 Q 0 0 11 0 Q 0 0 0 11 Q 0 0 -11 0 Q 0 0 0 -11 Z" fill="#E2FFF0" opacity="0.85" />
+  </g>
+
+  <!-- Layered Background Bubble (Translucent depth bubble behind main bubble) -->
+  <g opacity="0.28" transform="translate(232, 185) scale(0.92) translate(-232, -185)">
+    <path d="M 150 160 C 150 115 190 85 240 85 C 290 85 330 115 330 160 C 330 178 322 195 310 208 L 316 232 C 317 236 313 239 309 237 L 285 226 C 271 232 256 235 240 235 C 190 235 150 205 150 160 Z" fill="#FFFFFF" />
+    <!-- Heart silhouette in background bubble -->
+    <path d="M 240 142 C 235 132 222 125 210 130 C 196 136 195 152 205 165 L 240 195 L 275 165 C 285 152 284 136 270 130 C 258 125 245 132 240 142 Z" fill="#015230" opacity="0.4" />
+  </g>
+
+  <!-- Main Speech Bubble Shape (White, rounded speech balloon with lower-left tail) -->
+  <g filter="url(#bubbleDropShadow)">
+    <path d="M 256 160
+             C 336 160 415 186 415 272
+             C 415 348 350 382 288 382
+             C 264 382 238 376 216 388
+             L 174 416
+             C 161 425 148 418 148 402
+             L 148 372
+             C 112 355 95 318 95 272
+             C 95 186 176 160 256 160 Z"
+          fill="#FFFFFF" />
+  </g>
+
+  <!-- Heart inside Speech Bubble -->
+  <g filter="url(#heartShadow)">
+    <path d="M 256 338
+             C 250 338 214 308 178 268
+             C 142 228 125 198 126 166
+             C 127 132 153 112 186 112
+             C 215 112 242 129 256 150
+             C 270 129 297 112 326 112
+             C 359 112 385 132 386 166
+             C 387 198 370 228 334 268
+             C 298 308 262 338 256 338 Z"
+          transform="translate(256, 248) scale(0.68) translate(-256, -225)"
+          fill="url(#heartGrad)" />
+    
+    <!-- Heart Glossy Crescent Shine on Left Lobe -->
+    <path d="M 216 195
+             C 210 205 210 222 215 236
+             C 217 240 214 245 209 243
+             C 204 241 201 234 199 226
+             C 196 212 198 198 206 189
+             C 210 184 218 188 216 195 Z"
+          fill="#FFFFFF" opacity="0.92" />
+  </g>
+
+  <!-- "lovy chat" Script Typography Path -->
+  <!-- Handcrafted elegant flowing calligraphy identical to logo -->
+  <g fill="#FFFFFF">
+    <!-- Word: "lovy" -->
+    <!-- 'l' -->
+    <path d="M 124 452 C 120 452 116 448 116 442 C 116 428 128 398 142 380 C 147 373 154 376 153 384 C 151 396 142 422 135 442 C 137 444 140 445 143 444 C 147 443 151 438 152 434 C 154 433 156 435 155 438 C 152 447 144 452 136 452 C 131 452 127 450 124 452 Z
+             M 144 388 C 134 404 125 428 125 440 C 125 444 127 446 130 446 C 134 446 140 432 145 408 C 146 399 146 392 144 388 Z" />
+    <!-- 'o' -->
+    <path d="M 162 438 C 157 438 153 433 153 427 C 153 418 160 411 169 411 C 176 411 180 416 180 423 C 180 432 172 438 162 438 Z
+             M 168 417 C 163 417 159 421 159 426 C 159 432 163 434 167 434 C 172 434 174 430 174 425 C 174 420 171 417 168 417 Z
+             M 178 421 C 182 419 187 418 191 422 C 193 424 191 427 188 426 C 184 424 180 424 176 426 Z" />
+    <!-- 'v' -->
+    <path d="M 191 426 C 195 420 199 416 205 416 C 210 416 213 419 212 425 C 211 431 204 445 197 445 C 193 445 190 440 191 435 L 193 425 C 194 421 192 420 189 423 L 186 426 C 185 426 184 424 185 423 C 187 420 190 417 194 416 C 196 416 196 418 195 422 L 191 436 C 190 439 192 441 195 441 C 199 441 205 431 207 425 C 208 421 206 419 203 420 C 200 421 198 423 196 426 Z" />
+    <!-- 'y' with flowing tail loop -->
+    <path d="M 217 422 C 220 418 225 416 229 416 C 233 416 235 419 233 424 L 227 438 C 225 442 227 444 230 444 C 235 444 240 435 242 429 C 243 428 245 428 245 430 C 242 437 236 447 229 447 C 224 447 220 443 221 437 L 226 424 C 227 421 226 419 223 420 C 221 421 219 423 218 425 Z
+             M 235 422 L 226 447 C 222 458 217 469 210 475 C 204 480 197 479 194 474 C 192 470 194 466 198 466 C 201 466 203 469 204 471 C 206 474 209 475 212 472 C 217 467 222 456 226 445 L 233 425 C 234 422 237 422 238 424 Z" />
+
+    <!-- Word: "chat" -->
+    <!-- 'c' -->
+    <path d="M 276 430 C 275 435 271 439 265 439 C 259 439 254 433 254 425 C 254 416 261 411 269 411 C 274 411 278 414 278 418 C 278 420 276 422 274 421 C 272 420 270 417 267 417 C 262 417 258 422 258 426 C 258 432 262 435 266 435 C 270 435 273 432 274 429 C 275 428 277 429 276 430 Z" />
+    <!-- 'h' -->
+    <path d="M 284 443 C 282 443 280 440 281 436 L 293 388 C 295 380 301 377 304 381 C 306 384 303 392 299 406 L 294 422 C 298 417 304 414 308 414 C 313 414 316 417 315 423 L 311 436 C 310 440 312 442 315 442 C 318 442 322 438 324 434 C 325 433 327 434 326 436 C 323 442 317 445 312 445 C 307 445 304 441 305 435 L 309 423 C 310 419 308 417 305 417 C 300 417 294 422 291 428 L 288 440 C 287 442 286 443 284 443 Z" />
+    <!-- 'a' -->
+    <path d="M 334 438 C 329 438 325 434 325 428 C 325 420 331 414 339 414 C 344 414 348 417 348 422 L 345 434 C 347 435 350 433 352 430 C 353 430 354 431 354 433 C 351 438 346 441 342 441 C 339 441 338 439 338 436 C 336 438 334 438 334 438 Z
+             M 342 420 C 338 420 332 423 332 428 C 332 432 335 434 338 434 C 342 434 344 430 345 426 L 346 422 C 345 420 344 420 342 420 Z" />
+    <!-- 't' with crossbar -->
+    <path d="M 364 436 C 367 436 371 432 373 428 C 374 428 375 429 375 431 C 372 436 367 441 362 441 C 357 441 355 437 356 432 L 360 417 L 354 417 C 353 417 353 415 354 414 L 361 414 L 364 398 C 364 396 366 396 367 397 L 366 414 L 373 414 C 374 414 375 415 374 417 L 365 417 L 361 432 C 360 435 362 436 364 436 Z" />
+  </g>
+</svg>

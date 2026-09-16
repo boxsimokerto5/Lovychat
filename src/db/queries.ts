@@ -219,32 +219,40 @@ export async function blockOrUnblockUser(userUid: string, targetUid: string, act
 }
 
 export async function getAllUsers() {
+  let supabaseFailed = false;
   try {
     const res = await supabaseQueries.getAllUsers();
-    if (res && res.length > 0) return res;
+    if (Array.isArray(res)) return res;
   } catch (err: any) {
+    supabaseFailed = true;
     if (!isTableMissingError(err)) {
       console.warn('[Supabase] getAllUsers notice:', err?.message);
     }
   }
 
+  if (!supabaseFailed) return [];
+
   try {
     return await db.select().from(users).orderBy(desc(users.lastSeen)).limit(50);
   } catch (error) {
-    console.error('Database getAllUsers failed:', error);
-    throw new Error('Failed to fetch users from database.', { cause: error });
+    console.warn('Local database getAllUsers notice:', error);
+    return [];
   }
 }
 
 export async function getConversationMessages(conversationId: string) {
+  let supabaseFailed = false;
   try {
     const res = await supabaseQueries.getConversationMessages(conversationId);
-    if (res && res.length > 0) return res;
+    if (Array.isArray(res)) return res;
   } catch (err: any) {
+    supabaseFailed = true;
     if (!isTableMissingError(err)) {
       console.warn('[Supabase] getConversationMessages notice:', err?.message);
     }
   }
+
+  if (!supabaseFailed) return [];
 
   try {
     return await db
@@ -254,8 +262,8 @@ export async function getConversationMessages(conversationId: string) {
       .orderBy(messages.createdAt)
       .limit(100);
   } catch (error) {
-    console.error('Database getConversationMessages failed:', error);
-    throw new Error('Failed to fetch messages.', { cause: error });
+    console.warn('Local database getConversationMessages notice:', error);
+    return [];
   }
 }
 
@@ -337,14 +345,18 @@ export async function cleanupExpiredMoments() {
 }
 
 export async function getAllMoments() {
+  let supabaseFailed = false;
   try {
     const res = await supabaseQueries.getAllMoments();
-    if (res && res.length > 0) return res;
+    if (Array.isArray(res)) return res;
   } catch (err: any) {
+    supabaseFailed = true;
     if (!isTableMissingError(err)) {
       console.warn('[Supabase] getAllMoments notice:', err?.message);
     }
   }
+
+  if (!supabaseFailed) return [];
 
   try {
     // Only return moments within 24 hours
@@ -356,8 +368,8 @@ export async function getAllMoments() {
       .orderBy(desc(moments.createdAt))
       .limit(50);
   } catch (error) {
-    console.error('Database getAllMoments failed:', error);
-    throw new Error('Failed to fetch moments.', { cause: error });
+    console.warn('Local database getAllMoments notice:', error);
+    return [];
   }
 }
 
@@ -402,20 +414,24 @@ export async function insertMoment(momentData: {
 }
 
 export async function getAllBottles() {
+  let supabaseFailed = false;
   try {
     const res = await supabaseQueries.getAllBottles();
-    if (res && res.length > 0) return res;
+    if (Array.isArray(res)) return res;
   } catch (err: any) {
+    supabaseFailed = true;
     if (!isTableMissingError(err)) {
       console.warn('[Supabase] getAllBottles notice:', err?.message);
     }
   }
 
+  if (!supabaseFailed) return [];
+
   try {
     return await db.select().from(bottles).orderBy(desc(bottles.createdAt)).limit(50);
   } catch (error) {
-    console.error('Database getAllBottles failed:', error);
-    throw new Error('Failed to fetch drift bottles.', { cause: error });
+    console.warn('Local database getAllBottles notice:', error);
+    return [];
   }
 }
 
@@ -456,14 +472,18 @@ export async function insertBottle(bottleData: {
 }
 
 export async function getUserConversations(userUid: string) {
+  let supabaseFailed = false;
   try {
     const res = await supabaseQueries.getUserConversations(userUid);
-    if (res && res.length > 0) return res;
+    if (Array.isArray(res)) return res;
   } catch (err: any) {
+    supabaseFailed = true;
     if (!isTableMissingError(err)) {
       console.warn('[Supabase] getUserConversations notice:', err?.message);
     }
   }
+
+  if (!supabaseFailed) return [];
 
   try {
     const all = await db.select().from(conversations).orderBy(desc(conversations.updatedAt)).limit(100);
@@ -476,8 +496,8 @@ export async function getUserConversations(userUid: string) {
       }
     });
   } catch (error) {
-    console.error('Database getUserConversations failed:', error);
-    throw new Error('Failed to fetch user conversations.', { cause: error });
+    console.warn('Local database getUserConversations notice:', error);
+    return [];
   }
 }
 

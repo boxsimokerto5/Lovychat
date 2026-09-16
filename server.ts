@@ -323,11 +323,11 @@ app.get("/api/users/:uid", async (req, res) => {
 app.get("/api/chats", async (req, res) => {
   try {
     const userUid = req.query.userUid as string;
-    if (!userUid) {
-      return res.status(400).json({ error: "userUid query param is required." });
+    if (!userUid || typeof userUid !== 'string' || !userUid.trim() || userUid === 'undefined' || userUid === 'null') {
+      return res.json([]);
     }
     const list = await getUserConversations(userUid);
-    const formatted = list.map((c) => {
+    const formatted = (list || []).map((c) => {
       let participants: string[] = [];
       let participantDetails: any = {};
       let unreadCount: any = {};
@@ -347,7 +347,8 @@ app.get("/api/chats", async (req, res) => {
     });
     res.json(formatted);
   } catch (error: any) {
-    res.status(500).json({ error: error.message });
+    console.warn("/api/chats notice:", error?.message);
+    res.json([]);
   }
 });
 

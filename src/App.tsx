@@ -29,26 +29,31 @@ function MainApp() {
 
   // Monitor total unread badge for the current user
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
+    let isMounted = true;
     const fetchUnread = async () => {
       try {
         const chats = await api.getChats(user.uid);
+        if (!isMounted) return;
         let count = 0;
-        for (const chat of chats) {
-          if (chat.unreadCount && chat.unreadCount[user.uid]) {
+        for (const chat of (chats || [])) {
+          if (chat?.unreadCount && chat.unreadCount[user.uid]) {
             count += chat.unreadCount[user.uid];
           }
         }
         setTotalUnread(count);
-      } catch (e) {
-        console.error('Failed to fetch unread chats:', e);
+      } catch (e: any) {
+        // Silently recover during polling or network transitions
       }
     };
 
     fetchUnread();
     const interval = setInterval(fetchUnread, 4000);
-    return () => clearInterval(interval);
-  }, [user]);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [user?.uid]);
 
   const handleStartChatWithUser = async (targetUser: UserProfile, greetingPrefix?: string) => {
     if (!user || !userProfile) return;

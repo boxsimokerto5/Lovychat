@@ -14,8 +14,7 @@ import {
   Image as ImageIcon,
   Share2,
   Upload,
-  Loader2,
-  Clock
+  Loader2
 } from 'lucide-react';
 
 export const MomentsView: React.FC = () => {
@@ -162,16 +161,6 @@ export const MomentsView: React.FC = () => {
 
       {/* Moments List */}
       <div className="flex-1 overflow-y-auto p-3 space-y-3">
-        {/* Ephemeral Info Banner */}
-        <div className="flex items-center justify-between px-3 py-2 bg-emerald-50/90 border border-emerald-200/80 rounded-2xl text-[11px] text-emerald-800">
-          <div className="flex items-center gap-1.5 font-medium">
-            <Clock className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Momen Cerita Otomatis Aktif 24 Jam</span>
-          </div>
-          <span className="text-[10px] text-emerald-600 font-bold bg-emerald-100/80 px-2 py-0.5 rounded-full">
-            Hemat Database
-          </span>
-        </div>
         {(() => {
           const blockedUids = userProfile?.blockedUsers || [];
           const visibleMoments = moments.filter(m => !blockedUids.includes(m.authorId));
@@ -221,13 +210,7 @@ export const MomentsView: React.FC = () => {
                     />
                     <div>
                       <h4 className="text-xs font-bold text-slate-800">{item.authorName}</h4>
-                      <div className="flex items-center gap-1.5 text-[10px] text-slate-400">
-                        <span>{formatTimestamp(item.createdAt)}</span>
-                        <span>•</span>
-                        <span className="text-emerald-600 font-medium flex items-center gap-0.5">
-                          <Clock className="w-2.5 h-2.5" /> 24j
-                        </span>
-                      </div>
+                      <span className="text-[10px] text-slate-400">{formatTimestamp(item.createdAt)}</span>
                     </div>
                   </div>
 

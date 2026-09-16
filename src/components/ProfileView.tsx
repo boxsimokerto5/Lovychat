@@ -15,11 +15,7 @@ import {
   Sparkles,
   Upload,
   Loader2,
-  UserX,
-  Database,
-  ExternalLink,
-  FileCode,
-  Clock
+  UserX
 } from 'lucide-react';
 import { BlockedUsersModal } from './BlockedUsersModal';
 
@@ -29,48 +25,6 @@ export const ProfileView: React.FC = () => {
   const [showEditModal, setShowEditModal] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
   const [showBlockedModal, setShowBlockedModal] = useState(false);
-  const [showDbModal, setShowDbModal] = useState(false);
-  const [dbStatus, setDbStatus] = useState<any>(null);
-  const [copiedSql, setCopiedSql] = useState(false);
-  const [syncing, setSyncing] = useState(false);
-  const [syncResult, setSyncResult] = useState<string | null>(null);
-
-  React.useEffect(() => {
-    fetch('/api/supabase/status')
-      .then(r => r.json())
-      .then(d => setDbStatus(d))
-      .catch(() => {});
-  }, []);
-
-  const handleManualSync = async () => {
-    setSyncing(true);
-    setSyncResult(null);
-    try {
-      const res = await fetch('/api/supabase/sync', { method: 'POST' });
-      const data = await res.json();
-      if (data.success) {
-        setSyncResult(`Berhasil sinkron! (${data.report.usersSynced} user, ${data.report.momentsSynced} momen, ${data.report.bottlesSynced} botol)`);
-      } else {
-        setSyncResult('Gagal sinkron: ' + (data.error || 'Unknown error'));
-      }
-    } catch (e: any) {
-      setSyncResult('Gagal sinkron: ' + e.message);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  const handleCopySql = async () => {
-    try {
-      const res = await fetch('/api/supabase/schema');
-      const text = await res.text();
-      await navigator.clipboard.writeText(text);
-      setCopiedSql(true);
-      setTimeout(() => setCopiedSql(false), 2500);
-    } catch {
-      alert('Gagal menyalin SQL schema.');
-    }
-  };
 
   // Edit state
   const [editName, setEditName] = useState(userProfile?.displayName || '');
@@ -267,39 +221,14 @@ export const ProfileView: React.FC = () => {
           </div>
 
           <div className="py-2 flex items-center justify-between text-xs">
-            <span className="text-slate-600 font-medium">Database Backend</span>
-            <button
-              onClick={() => setShowDbModal(true)}
-              className="flex items-center gap-1.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 px-2 py-1 rounded-xl transition text-[11px] font-bold"
-            >
-              <Database className="w-3.5 h-3.5 text-emerald-600" />
-              <span>Supabase ({dbStatus?.connected ? 'Terhubung' : 'Aktif'})</span>
-            </button>
-          </div>
-
-          <div className="py-2 flex items-center justify-between text-xs">
             <span className="text-slate-600 font-medium">Email Terdaftar</span>
             <span className="text-slate-500 font-mono text-[11px] truncate max-w-[180px]">{userProfile?.email}</span>
           </div>
 
           <div className="py-2 flex items-center justify-between text-xs">
-            <span className="text-slate-600 font-medium">Kebijakan Obrolan</span>
-            <span className="text-amber-700 bg-amber-50 px-2 py-0.5 rounded-lg text-[10px] font-bold">
-              Pesan Dihapus Saat Logout
-            </span>
-          </div>
-
-          <div className="py-2 flex items-center justify-between text-xs">
-            <span className="text-slate-600 font-medium">Masa Aktif Momen</span>
-            <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg text-[10px] font-bold flex items-center gap-1">
-              <Clock className="w-3 h-3 text-emerald-600" /> Bertahan 1x24 Jam
-            </span>
-          </div>
-
-          <div className="py-2 flex items-center justify-between text-xs">
             <span className="text-slate-600 font-medium">Keamanan Jaringan</span>
             <span className="text-emerald-700 font-medium flex items-center gap-1 text-[11px]">
-              <Sparkles className="w-3 h-3 text-emerald-600" /> Terenkripsi & Real-Time
+              <Sparkles className="w-3.5 h-3.5 text-emerald-600" /> Terenkripsi & Real-Time
             </span>
           </div>
         </div>
@@ -509,119 +438,6 @@ export const ProfileView: React.FC = () => {
         isOpen={showBlockedModal}
         onClose={() => setShowBlockedModal(false)}
       />
-
-      {/* Modal: Database Supabase Info */}
-      {showDbModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
-          <div className="w-full max-w-sm bg-white rounded-3xl p-5 shadow-2xl space-y-4 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center">
-                  <Database className="w-4 h-4" />
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-slate-800">Status Supabase</h3>
-                  <span className="text-[10px] text-slate-400">Database Cloud PostgreSQL</span>
-                </div>
-              </div>
-              <button onClick={() => setShowDbModal(false)} className="text-slate-400 hover:text-slate-600">
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <div className="space-y-2.5 text-xs">
-              <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-2xl space-y-1.5">
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-[11px]">Koneksi API:</span>
-                  <span className="font-bold text-emerald-600 flex items-center gap-1">
-                    <Check className="w-3 h-3" /> Berhasil Terhubung
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-[11px]">Status Tabel:</span>
-                  <span className={`font-bold flex items-center gap-1 ${dbStatus?.tablesReady ? 'text-emerald-600' : 'text-amber-600'}`}>
-                    <Check className="w-3 h-3" /> {dbStatus?.tablesReady ? 'Tabel Siap & Aktif' : 'Menunggu Migrasi'}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-[11px]">Project ID:</span>
-                  <span className="font-mono text-[10px] bg-slate-200 px-1.5 py-0.5 rounded text-slate-700">
-                    guccrttvdzegmqxhrvgp
-                  </span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-slate-500 text-[11px]">Supabase URL:</span>
-                  <span className="font-mono text-[9px] text-slate-600 truncate max-w-[170px]">
-                    https://guccrttvdzegmqxhrvgp.supabase.co
-                  </span>
-                </div>
-              </div>
-
-              {dbStatus?.tablesReady ? (
-                <div className="p-3 bg-emerald-50 border border-emerald-200/80 rounded-2xl space-y-2 text-emerald-900">
-                  <div className="flex items-center gap-1.5 font-bold text-[11px] text-emerald-800">
-                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                    <span>Database Supabase Beroperasi Penuh</span>
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-emerald-700">
-                    Semua tabel database (users, messages, moments, bottles, conversations) telah terdeteksi aktif di Supabase.
-                  </p>
-
-                  <button
-                    onClick={handleManualSync}
-                    disabled={syncing}
-                    className="w-full py-2 bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 text-white rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-1.5 shadow-xs"
-                  >
-                    {syncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Database className="w-3.5 h-3.5" />}
-                    <span>{syncing ? 'Menyinkronkan...' : 'Sinkronkan Data ke Supabase Sekarang'}</span>
-                  </button>
-
-                  {syncResult && (
-                    <div className="p-2 bg-white/80 rounded-xl text-[10px] font-medium text-slate-700 border border-emerald-200">
-                      {syncResult}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="p-3 bg-amber-50 border border-amber-200/80 rounded-2xl space-y-2 text-amber-900">
-                  <div className="flex items-center gap-1.5 font-bold text-[11px]">
-                    <FileCode className="w-3.5 h-3.5 text-amber-700" />
-                    <span>Migrasi Tabel Database</span>
-                  </div>
-                  <p className="text-[11px] leading-relaxed text-amber-800">
-                    Pastikan tabel (users, conversations, messages, moments, bottles) sudah dibuat di SQL Editor Supabase Anda.
-                  </p>
-
-                  <button
-                    onClick={handleCopySql}
-                    className="w-full py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-xl font-bold text-[11px] transition flex items-center justify-center gap-1.5 shadow-xs"
-                  >
-                    {copiedSql ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    <span>{copiedSql ? 'Script SQL Berhasil Disalin!' : 'Salin Script SQL Schema'}</span>
-                  </button>
-                </div>
-              )}
-
-              <a
-                href="https://supabase.com/dashboard/project/guccrttvdzegmqxhrvgp/editor"
-                target="_blank"
-                rel="noreferrer"
-                className="w-full py-2.5 bg-slate-800 hover:bg-slate-900 text-white text-xs font-bold rounded-xl transition flex items-center justify-center gap-1.5 shadow-sm"
-              >
-                <span>Buka Table Editor Supabase</span>
-                <ExternalLink className="w-3.5 h-3.5" />
-              </a>
-            </div>
-
-            <button
-              onClick={() => setShowDbModal(false)}
-              className="w-full py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-bold rounded-xl transition"
-            >
-              Tutup
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

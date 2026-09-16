@@ -134,9 +134,11 @@ export const ActiveChatRoom: React.FC<ActiveChatRoomProps> = ({ chat, onBack }) 
     if (!chat.id) return;
     try {
       const msgs = await api.getMessages(chat.id);
-      setMessages(msgs);
-    } catch (err) {
-      console.error('Error fetching messages:', err);
+      if (Array.isArray(msgs)) {
+        setMessages(msgs);
+      }
+    } catch {
+      // Gracefully recover on network blip
     }
   }, [chat.id]);
 

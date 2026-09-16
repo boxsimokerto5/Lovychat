@@ -3,9 +3,13 @@ import { ChatConversation, ChatMessage, MomentPost, BottleMessage, UserProfile }
 export const api = {
   // Users
   async getUsers(): Promise<UserProfile[]> {
-    const res = await fetch('/api/users');
-    if (!res.ok) throw new Error('Gagal memuat pengguna.');
-    return res.json();
+    try {
+      const res = await fetch('/api/users');
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   },
 
   async getUser(uid: string): Promise<UserProfile | null> {
@@ -52,9 +56,16 @@ export const api = {
 
   // Chats / Conversations
   async getChats(userUid: string): Promise<ChatConversation[]> {
-    const res = await fetch(`/api/chats?userUid=${encodeURIComponent(userUid)}`);
-    if (!res.ok) throw new Error('Gagal memuat percakapan.');
-    return res.json();
+    if (!userUid || typeof userUid !== 'string' || !userUid.trim() || userUid === 'undefined' || userUid === 'null') {
+      return [];
+    }
+    try {
+      const res = await fetch(`/api/chats?userUid=${encodeURIComponent(userUid)}`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   },
 
   async createOrGetChat(data: {
@@ -109,9 +120,14 @@ export const api = {
 
   // Messages
   async getMessages(conversationId: string): Promise<ChatMessage[]> {
-    const res = await fetch(`/api/messages?conversationId=${encodeURIComponent(conversationId)}`);
-    if (!res.ok) throw new Error('Gagal memuat pesan.');
-    return res.json();
+    if (!conversationId) return [];
+    try {
+      const res = await fetch(`/api/messages?conversationId=${encodeURIComponent(conversationId)}`);
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   },
 
   async sendMessage(data: {
@@ -134,9 +150,13 @@ export const api = {
 
   // Moments
   async getMoments(): Promise<MomentPost[]> {
-    const res = await fetch('/api/moments');
-    if (!res.ok) throw new Error('Gagal memuat Momen.');
-    return res.json();
+    try {
+      const res = await fetch('/api/moments');
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   },
 
   async createMoment(momentData: {
@@ -191,9 +211,13 @@ export const api = {
 
   // Drift Bottles
   async getBottles(): Promise<BottleMessage[]> {
-    const res = await fetch('/api/bottles');
-    if (!res.ok) throw new Error('Gagal memuat Pesan Botol.');
-    return res.json();
+    try {
+      const res = await fetch('/api/bottles');
+      if (!res.ok) return [];
+      return await res.json();
+    } catch {
+      return [];
+    }
   },
 
   async throwBottle(data: {

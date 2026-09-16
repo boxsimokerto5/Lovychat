@@ -28,29 +28,31 @@ export const ChatsView: React.FC<ChatsViewProps> = ({ onOpenChat, onNavigateToNe
   const [loadingUsers, setLoadingUsers] = useState(false);
 
   const loadConversations = useCallback(async () => {
-    if (!user) return;
+    if (!user?.uid) return;
     try {
       const chatList = await api.getChats(user.uid);
-      chatList.sort((a, b) => {
-        const timeA = new Date(a.lastUpdated || 0).getTime();
-        const timeB = new Date(b.lastUpdated || 0).getTime();
-        return timeB - timeA;
-      });
-      setConversations(chatList);
-    } catch (err) {
-      console.error('Error fetching chats:', err);
+      if (Array.isArray(chatList)) {
+        chatList.sort((a, b) => {
+          const timeA = new Date(a.lastUpdated || 0).getTime();
+          const timeB = new Date(b.lastUpdated || 0).getTime();
+          return timeB - timeA;
+        });
+        setConversations(chatList);
+      }
+    } catch {
+      // Gracefully continue polling on network blip
     } finally {
       setLoading(false);
     }
-  }, [user]);
+  }, [user?.uid]);
 
   // Polling listener for user's conversations
   useEffect(() => {
-    if (!user) return;
+    if (!user?.uid) return;
     loadConversations();
     const interval = setInterval(loadConversations, 3000);
     return () => clearInterval(interval);
-  }, [user, loadConversations]);
+  }, [user?.uid, loadConversations]);
 
   // Fetch registered users when modal opens
   const handleOpenNewChat = async () => {
