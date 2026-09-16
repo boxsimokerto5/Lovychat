@@ -27,3 +27,13 @@ allprojects {
 task clean(type: Delete) {
     delete rootProject.buildDir
 }
+
+task assembleRelease(dependsOn: ':app:assembleRelease') {
+    group = 'build'
+    description = 'Assembles release APK for app'
+}
+
+task bundleRelease(dependsOn: ':app:bundleRelease') {
+    group = 'build'
+    description = 'Bundles release AAB for app'
+}
