@@ -22,6 +22,11 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
@@ -74,9 +79,18 @@ jobs:
           echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> "$ANDROID_HOME/licenses/android-sdk-license" || true
           yes | sdkmanager --licenses 2>/dev/null || true
 
-      - name: Grant Execute Permission to Gradlew
+      - name: Ensure Gradlew Executable
         run: |
-          chmod +x android/gradlew
+          if [ -f "android/gradlew" ]; then
+            chmod +x android/gradlew
+            echo "Found existing android/gradlew"
+          else
+            echo "android/gradlew not found in repository, generating wrapper via Gradle..."
+            cd android
+            gradle wrapper --gradle-version 8.14.3
+            chmod +x gradlew
+            cd ..
+          fi
 
       - name: Build Signed APK (Direct Device Installation)
         working-directory: ./android
@@ -86,7 +100,11 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew assembleRelease --no-daemon
+          if [ -f "./gradlew" ]; then
+            ./gradlew assembleRelease --no-daemon
+          else
+            gradle assembleRelease --no-daemon
+          fi
 
       - name: Build Signed AAB (Google Play Store Bundle)
         working-directory: ./android
@@ -96,7 +114,11 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew bundleRelease --no-daemon
+          if [ -f "./gradlew" ]; then
+            ./gradlew bundleRelease --no-daemon
+          else
+            gradle bundleRelease --no-daemon
+          fi
 
       - name: Collect & Organize Artifacts
         run: |
