@@ -22,9 +22,6 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Android SDK
-        uses: android-actions/setup-android@v3
-
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
@@ -71,6 +68,13 @@ jobs:
           fi
           ls -lh android/app/release.keystore
 
+      - name: Accept Android SDK Licenses
+        run: |
+          mkdir -p "$ANDROID_HOME/licenses" || true
+          echo "24333f8a63b6825ea9c5514f83c2829b004d1fee" >> "$ANDROID_HOME/licenses/android-sdk-license" || true
+          echo "d56f5187479451eabf01fb78af6dfcb131a6481e" >> "$ANDROID_HOME/licenses/android-sdk-license" || true
+          yes | sdkmanager --licenses 2>/dev/null || true
+
       - name: Grant Execute Permission to Gradlew
         run: |
           chmod +x android/gradlew
@@ -83,7 +87,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon
 
       - name: Build Signed AAB (Google Play Store Bundle)
         working-directory: ./android
@@ -93,7 +97,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew bundleRelease --no-daemon --stacktrace
+          ./gradlew bundleRelease --no-daemon
 
       - name: Collect & Organize Artifacts
         run: |
