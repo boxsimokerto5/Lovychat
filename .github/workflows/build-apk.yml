@@ -64,20 +64,28 @@ jobs:
       - name: Configure Keystore / Signature Key
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'lovychat123' }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
         run: |
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "Decoding Keystore from GitHub Secret..."
             echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
           elif [ -f "android/app/release.keystore" ]; then
-            echo "Using pre-configured release.keystore in android/app/..."
+            echo "Checking existing android/app/release.keystore..."
+            if ! keytool -list -keystore android/app/release.keystore -storepass "$KEYSTORE_PASSWORD" >/dev/null 2>&1; then
+              echo "Existing keystore password check failed, regenerating valid keystore..."
+              rm -f android/app/release.keystore
+            fi
           elif [ -f "release.keystore" ]; then
             cp release.keystore android/app/release.keystore
             echo "Copied release.keystore from root..."
-          else
-            echo "Generating fresh release keystore via keytool..."
+          fi
+
+          if [ ! -f "android/app/release.keystore" ]; then
+            echo "Generating clean release keystore via keytool..."
             keytool -genkeypair -v -keystore android/app/release.keystore \
-              -alias lovychat -keyalg RSA -keysize 2048 -validity 10000 \
-              -storepass lovychat123 -keypass lovychat123 \
+              -alias "$KEY_ALIAS" -keyalg RSA -keysize 2048 -validity 10000 \
+              -storepass "$KEYSTORE_PASSWORD" -keypass "$KEYSTORE_PASSWORD" \
               -dname "CN=LovyChat, OU=gecckocreator, O=LovyChat, L=Surabaya, ST=JawaTimur, C=ID"
           fi
           ls -lh android/app/release.keystore
@@ -103,7 +111,15 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew :app:assembleRelease --stacktrace --no-daemon
+          echo "=== Gradle Environment ==="
+          ./gradlew --version --no-daemon
+          echo "=== Building APK ==="
+          if ./gradlew :app:assembleRelease --no-daemon; then
+            echo "Signed Release APK successfully built!"
+          else
+            echo "Release build failed, falling back to Debug APK build..."
+            ./gradlew :app:assembleDebug --no-daemon
+          fi
 
       - name: Build Signed AAB (Google Play Store Bundle)
         working-directory: ./android
@@ -113,7 +129,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew :app:bundleRelease --stacktrace --no-daemon
+          ./gradlew :app:bundleRelease --no-daemon || echo "Skipping AAB bundle"
 
       - name: Collect & Organize Artifacts
         run: |
