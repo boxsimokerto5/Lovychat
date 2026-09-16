@@ -16,11 +16,11 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up Java JDK 17
+      - name: Set up Java JDK 21
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -101,9 +101,9 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
           if [ -f "./gradlew" ]; then
-            ./gradlew assembleRelease --no-daemon
+            ./gradlew :app:assembleRelease --no-daemon || ./gradlew assembleRelease --no-daemon
           else
-            gradle assembleRelease --no-daemon
+            gradle :app:assembleRelease --no-daemon || gradle assembleRelease --no-daemon
           fi
 
       - name: Build Signed AAB (Google Play Store Bundle)
@@ -115,25 +115,40 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
           if [ -f "./gradlew" ]; then
-            ./gradlew bundleRelease --no-daemon
+            ./gradlew :app:bundleRelease --no-daemon || ./gradlew bundleRelease --no-daemon
           else
-            gradle bundleRelease --no-daemon
+            gradle :app:bundleRelease --no-daemon || gradle bundleRelease --no-daemon
           fi
 
       - name: Collect & Organize Artifacts
         run: |
           mkdir -p build-outputs
           # Find APK
-          APK_FILE=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
-          if [ -n "$APK_FILE" ]; then
-            cp "$APK_FILE" build-outputs/LovyChat-release.apk
-            echo "Found APK: $APK_FILE -> copied to build-outputs/LovyChat-release.apk"
+          find android -type f -name "*release*.apk" | while read -r apk; do
+            echo "Found APK: $apk -> copying to build-outputs/LovyChat-release.apk"
+            cp "$apk" build-outputs/LovyChat-release.apk
+            break
+          done
+          # If not found with release in name, fallback to any apk
+          if [ ! -f "build-outputs/LovyChat-release.apk" ]; then
+            find android -type f -name "*.apk" | while read -r apk; do
+              echo "Fallback APK: $apk -> copying to build-outputs/LovyChat-release.apk"
+              cp "$apk" build-outputs/LovyChat-release.apk
+              break
+            done
           fi
           # Find AAB
-          AAB_FILE=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -n 1)
-          if [ -n "$AAB_FILE" ]; then
-            cp "$AAB_FILE" build-outputs/LovyChat-release.aab
-            echo "Found AAB: $AAB_FILE -> copied to build-outputs/LovyChat-release.aab"
+          find android -type f -name "*release*.aab" | while read -r aab; do
+            echo "Found AAB: $aab -> copying to build-outputs/LovyChat-release.aab"
+            cp "$aab" build-outputs/LovyChat-release.aab
+            break
+          done
+          if [ ! -f "build-outputs/LovyChat-release.aab" ]; then
+            find android -type f -name "*.aab" | while read -r aab; do
+              echo "Fallback AAB: $aab -> copying to build-outputs/LovyChat-release.aab"
+              cp "$aab" build-outputs/LovyChat-release.aab
+              break
+            done
           fi
           ls -lh build-outputs/
 
