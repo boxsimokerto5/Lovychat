@@ -25,7 +25,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-35 build-tools;35.0.0'
+          packages: 'platforms;android-35 platforms;android-36 build-tools;35.0.0 build-tools;36.0.0'
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -60,11 +60,23 @@ jobs:
             npx cap add android
           fi
           npx cap sync android
+          # Ensure compileSdk 36 and targetSdk 36 for Capacitor 8 & AndroidX compatibility
+          sed -i 's/compileSdk = .*/compileSdk 36/g' android/app/build.gradle || true
+          sed -i 's/targetSdkVersion .*/targetSdk 36/g' android/app/build.gradle || true
+          sed -i 's/compileSdkVersion = [0-9]*/compileSdkVersion = 36/g' android/variables.gradle || true
+          sed -i 's/targetSdkVersion = [0-9]*/targetSdkVersion = 36/g' android/variables.gradle || true
 
-      - name: Configure Android SDK local.properties
+      - name: Configure Android SDK local.properties & gradle.properties
         run: |
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
+          cat << 'EOF' > android/gradle.properties
+          org.gradle.jvmargs=-Xmx2048m -Dfile.encoding=UTF-8
+          android.useAndroidX=true
+          android.enableJetifier=true
+          android.suppressUnsupportedCompileSdk=36
+          EOF
           cat android/local.properties
+          cat android/gradle.properties
 
       - name: Ensure settings.gradle Structure
         run: |
@@ -147,15 +159,15 @@ jobs:
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
           echo "=== Building Android APK ==="
-          if ./gradlew :app:assembleRelease --no-daemon; then
+          if ./gradlew :app:assembleRelease --stacktrace --no-daemon; then
             echo "Release APK build completed successfully!"
-          elif ./gradlew :app:assembleDebug --no-daemon; then
+          elif ./gradlew :app:assembleDebug --stacktrace --no-daemon; then
             echo "Debug APK build completed successfully!"
-          elif ./gradlew assembleRelease --no-daemon; then
+          elif ./gradlew assembleRelease --stacktrace --no-daemon; then
             echo "assembleRelease completed successfully!"
           else
             echo "assembleDebug completed successfully!"
-            ./gradlew assembleDebug --no-daemon
+            ./gradlew assembleDebug --stacktrace --no-daemon
           fi
 
       - name: Build Signed AAB (Google Play Store Bundle)
@@ -166,7 +178,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew :app:bundleRelease --no-daemon || ./gradlew bundleRelease --no-daemon || echo "Skipping AAB bundle"
+          ./gradlew :app:bundleRelease --stacktrace --no-daemon || ./gradlew bundleRelease --stacktrace --no-daemon || echo "Skipping AAB bundle"
 
       - name: Collect & Organize Artifacts
         run: |
