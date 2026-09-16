@@ -1,0 +1,214 @@
+import { ChatConversation, ChatMessage, MomentPost, BottleMessage, UserProfile } from '../types';
+
+export const api = {
+  // Users
+  async getUsers(): Promise<UserProfile[]> {
+    const res = await fetch('/api/users');
+    if (!res.ok) throw new Error('Gagal memuat pengguna.');
+    return res.json();
+  },
+
+  async getUser(uid: string): Promise<UserProfile | null> {
+    const res = await fetch(`/api/users/${encodeURIComponent(uid)}`);
+    if (!res.ok) {
+      if (res.status === 404) return null;
+      throw new Error('Gagal memuat detail pengguna.');
+    }
+    return res.json();
+  },
+
+  async syncProfile(profile: Partial<UserProfile>): Promise<UserProfile> {
+    const res = await fetch('/api/auth/sync', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(profile),
+    });
+    if (!res.ok) throw new Error('Gagal sinkronisasi profil.');
+    const data = await res.json();
+    return data.user;
+  },
+
+  async blockOrUnblockUser(userUid: string, targetUid: string, action: 'block' | 'unblock') {
+    const res = await fetch('/api/auth/block', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userUid, targetUid, action }),
+    });
+    if (!res.ok) throw new Error('Gagal memproses blokir.');
+    return res.json();
+  },
+
+  async logoutCleanup(uid: string) {
+    try {
+      await fetch('/api/auth/logout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ uid }),
+      });
+    } catch (e) {
+      console.warn('Logout cleanup notice:', e);
+    }
+  },
+
+  // Chats / Conversations
+  async getChats(userUid: string): Promise<ChatConversation[]> {
+    const res = await fetch(`/api/chats?userUid=${encodeURIComponent(userUid)}`);
+    if (!res.ok) throw new Error('Gagal memuat percakapan.');
+    return res.json();
+  },
+
+  async createOrGetChat(data: {
+    id?: string;
+    participants: string[];
+    participantDetails: Record<string, any>;
+    lastMessage?: string;
+    lastSenderId?: string;
+  }): Promise<ChatConversation> {
+    const res = await fetch('/api/chats', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Gagal membuat percakapan.');
+    return res.json();
+  },
+
+  async markChatRead(chatId: string, userUid: string) {
+    try {
+      await fetch(`/api/chats/${encodeURIComponent(chatId)}/read`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userUid }),
+      });
+    } catch (e) {
+      console.warn('markChatRead notice:', e);
+    }
+  },
+
+  async getTypingStatus(chatId: string, excludeUid: string): Promise<{ isTyping: boolean; typingUserIds: string[] }> {
+    try {
+      const res = await fetch(`/api/chats/${encodeURIComponent(chatId)}/typing?excludeUid=${encodeURIComponent(excludeUid)}`);
+      if (!res.ok) return { isTyping: false, typingUserIds: [] };
+      return await res.json();
+    } catch {
+      return { isTyping: false, typingUserIds: [] };
+    }
+  },
+
+  async setTypingStatus(chatId: string, userUid: string, isTyping: boolean): Promise<void> {
+    try {
+      await fetch(`/api/chats/${encodeURIComponent(chatId)}/typing`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userUid, isTyping }),
+      });
+    } catch (e) {
+      console.warn('setTypingStatus notice:', e);
+    }
+  },
+
+  // Messages
+  async getMessages(conversationId: string): Promise<ChatMessage[]> {
+    const res = await fetch(`/api/messages?conversationId=${encodeURIComponent(conversationId)}`);
+    if (!res.ok) throw new Error('Gagal memuat pesan.');
+    return res.json();
+  },
+
+  async sendMessage(data: {
+    conversationId: string;
+    senderId: string;
+    recipientId: string;
+    text?: string;
+    imageUrl?: string;
+    senderName?: string;
+    senderAvatar?: string;
+  }): Promise<ChatMessage> {
+    const res = await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Gagal mengirim pesan.');
+    return res.json();
+  },
+
+  // Moments
+  async getMoments(): Promise<MomentPost[]> {
+    const res = await fetch('/api/moments');
+    if (!res.ok) throw new Error('Gagal memuat Momen.');
+    return res.json();
+  },
+
+  async createMoment(momentData: {
+    userId: string;
+    authorName: string;
+    authorAvatar: string;
+    content: string;
+    imageUrl?: string | null;
+    location?: string | null;
+  }): Promise<MomentPost> {
+    const res = await fetch('/api/moments', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(momentData),
+    });
+    if (!res.ok) throw new Error('Gagal membagikan Momen.');
+    return res.json();
+  },
+
+  async deleteMoment(momentId: string | number, userUid: string) {
+    const res = await fetch(`/api/moments/${momentId}?userUid=${encodeURIComponent(userUid)}`, {
+      method: 'DELETE',
+    });
+    if (!res.ok) throw new Error('Gagal menghapus Momen.');
+    return res.json();
+  },
+
+  async likeMoment(momentId: string | number, userUid: string) {
+    const res = await fetch(`/api/moments/${momentId}/like`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userUid }),
+    });
+    if (!res.ok) throw new Error('Gagal menyukai Momen.');
+    return res.json();
+  },
+
+  async commentMoment(momentId: string | number, comment: {
+    userId: string;
+    userName: string;
+    userAvatar: string;
+    text: string;
+  }) {
+    const res = await fetch(`/api/moments/${momentId}/comment`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(comment),
+    });
+    if (!res.ok) throw new Error('Gagal mengirim komentar.');
+    return res.json();
+  },
+
+  // Drift Bottles
+  async getBottles(): Promise<BottleMessage[]> {
+    const res = await fetch('/api/bottles');
+    if (!res.ok) throw new Error('Gagal memuat Pesan Botol.');
+    return res.json();
+  },
+
+  async throwBottle(data: {
+    senderId: string;
+    senderName: string;
+    senderAvatar: string;
+    senderGender: string;
+    content: string;
+  }): Promise<BottleMessage> {
+    const res = await fetch('/api/bottles', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Gagal melempar botol.');
+    return res.json();
+  },
+};

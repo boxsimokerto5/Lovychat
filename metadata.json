@@ -1,0 +1,6 @@
+{
+  "name": "LovyChat",
+  "description": "LovyChat - Aplikasi pesan instan dan obrolan real-time dengan fitur chat langsung, pesan botol, teman di sekitar, momen status, dan autentikasi aman.",
+  "requestFramePermissions": ["geolocation"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

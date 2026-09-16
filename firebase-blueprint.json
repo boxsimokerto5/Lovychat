@@ -1,0 +1,149 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "User profile information",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "michatId": { "type": "string" },
+        "displayName": { "type": "string" },
+        "email": { "type": "string" },
+        "avatarUrl": { "type": "string" },
+        "bio": { "type": "string" },
+        "gender": { "type": "string", "enum": ["female", "male", "unspecified"] },
+        "region": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "isOnline": { "type": "boolean" },
+        "lastSeen": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "blockedUsers": { "type": "array" },
+        "passwordHash": { "type": "string" }
+      },
+      "required": ["uid", "michatId", "displayName", "email", "avatarUrl", "gender"]
+    },
+    "ChatConversation": {
+      "title": "ChatConversation",
+      "description": "A conversation room between users",
+      "type": "object",
+      "properties": {
+        "participants": { "type": "array" },
+        "participantDetails": { "type": "object" },
+        "lastMessage": { "type": "string" },
+        "lastSenderId": { "type": "string" },
+        "lastUpdated": { "type": "string" },
+        "unreadCount": { "type": "object" },
+        "createdAt": { "type": "string" },
+        "isGroup": { "type": "boolean" },
+        "groupName": { "type": "string" }
+      },
+      "required": ["participants", "participantDetails", "lastMessage", "lastSenderId"]
+    },
+    "ChatMessage": {
+      "title": "ChatMessage",
+      "description": "Message within a conversation",
+      "type": "object",
+      "properties": {
+        "chatId": { "type": "string" },
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderAvatar": { "type": "string" },
+        "text": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "type": { "type": "string", "enum": ["text", "image", "audio", "system"] },
+        "readBy": { "type": "array" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["chatId", "senderId", "senderName", "senderAvatar", "text", "type"]
+    },
+    "BottleMessage": {
+      "title": "BottleMessage",
+      "description": "Message in a bottle thrown into the sea",
+      "type": "object",
+      "properties": {
+        "senderId": { "type": "string" },
+        "senderName": { "type": "string" },
+        "senderAvatar": { "type": "string" },
+        "senderGender": { "type": "string" },
+        "senderRegion": { "type": "string" },
+        "content": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "fishedCount": { "type": "number" }
+      },
+      "required": ["senderId", "senderName", "senderAvatar", "content"]
+    },
+    "MomentPost": {
+      "title": "MomentPost",
+      "description": "User social feed post",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorAvatar": { "type": "string" },
+        "authorMichatId": { "type": "string" },
+        "content": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "likes": { "type": "array" },
+        "commentsCount": { "type": "number" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["authorId", "authorName", "authorAvatar", "content"]
+    },
+    "MomentComment": {
+      "title": "MomentComment",
+      "description": "Comment on a moment post",
+      "type": "object",
+      "properties": {
+        "authorId": { "type": "string" },
+        "authorName": { "type": "string" },
+        "authorAvatar": { "type": "string" },
+        "text": { "type": "string" },
+        "createdAt": { "type": "string" }
+      },
+      "required": ["authorId", "authorName", "authorAvatar", "text"]
+    },
+    "NearbyBroadcast": {
+      "title": "NearbyBroadcast",
+      "description": "User location broadcast for nearby discovery",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["userId", "latitude", "longitude"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "UserProfile",
+      "description": "User profiles"
+    },
+    "/chats/{chatId}": {
+      "schema": "ChatConversation",
+      "description": "Conversation threads"
+    },
+    "/chats/{chatId}/messages/{messageId}": {
+      "schema": "ChatMessage",
+      "description": "Chat messages"
+    },
+    "/bottles/{bottleId}": {
+      "schema": "BottleMessage",
+      "description": "Floating bottles in the ocean"
+    },
+    "/moments/{momentId}": {
+      "schema": "MomentPost",
+      "description": "Social feed moments"
+    },
+    "/moments/{momentId}/comments/{commentId}": {
+      "schema": "MomentComment",
+      "description": "Comments on moments"
+    },
+    "/nearby_broadcasts/{userId}": {
+      "schema": "NearbyBroadcast",
+      "description": "Nearby radar coordinates"
+    }
+  }
+}

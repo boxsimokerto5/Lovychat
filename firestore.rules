@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Users collection
+    match /users/{userId} {
+      allow read, write: if true;
+    }
+
+    // Direct & Group Chats
+    match /chats/{chatId} {
+      allow read, write: if true;
+
+      // Chat Messages
+      match /messages/{messageId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Message in a Bottle (Pesan dalam Botol)
+    match /bottles/{bottleId} {
+      allow read, write: if true;
+    }
+
+    // Moments (Momen Status / Linimasa)
+    match /moments/{momentId} {
+      allow read, write: if true;
+
+      match /comments/{commentId} {
+        allow read, write: if true;
+      }
+    }
+
+    // Nearby broadcasts / Status beacon
+    match /nearby_broadcasts/{userId} {
+      allow read, write: if true;
+    }
+  }
+}
+
