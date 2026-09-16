@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.lovychat.app',
+  appId: 'com.lovychat.gecckocreator',
   appName: 'LovyChat',
   webDir: 'dist',
   server: {

@@ -1,14 +1,14 @@
 apply plugin: 'com.android.application'
 
 android {
-    namespace = "com.lovychat.app"
+    namespace = "com.lovychat.gecckocreator"
     compileSdk = rootProject.ext.compileSdkVersion
     defaultConfig {
-        applicationId "com.lovychat.app"
+        applicationId "com.lovychat.gecckocreator"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
-        versionName "1.0"
+        versionName "1.0.0"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -18,14 +18,15 @@ android {
     }
     signingConfigs {
         release {
-            def keystoreFile = file("release.keystore")
-            if (System.getenv("KEYSTORE_PATH") && file(System.getenv("KEYSTORE_PATH")).exists()) {
-                keystoreFile = file(System.getenv("KEYSTORE_PATH"))
-            } else if (file("../../release.keystore").exists()) {
-                keystoreFile = file("../../release.keystore")
+            def ksFile = file("release.keystore")
+            if (System.getenv("KEYSTORE_PATH")) {
+                def envKs = file(System.getenv("KEYSTORE_PATH"))
+                if (envKs.exists()) ksFile = envKs
+            } else if (!ksFile.exists() && file("../../release.keystore").exists()) {
+                ksFile = file("../../release.keystore")
             }
-            if (keystoreFile.exists()) {
-                storeFile keystoreFile
+            if (ksFile.exists()) {
+                storeFile ksFile
                 storePassword System.getenv("KEYSTORE_PASSWORD") ?: "lovychat123"
                 keyAlias System.getenv("KEY_ALIAS") ?: "lovychat"
                 keyPassword System.getenv("KEY_PASSWORD") ?: "lovychat123"
@@ -34,7 +35,10 @@ android {
     }
     buildTypes {
         release {
-            signingConfig signingConfigs.release
+            def ksFile = file("release.keystore")
+            if (ksFile.exists() || (System.getenv("KEYSTORE_PATH") && file(System.getenv("KEYSTORE_PATH")).exists()) || file("../../release.keystore").exists()) {
+                signingConfig signingConfigs.release
+            }
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }

@@ -1,4 +1,4 @@
-package com.lovychat.app;
+package com.lovychat.gecckocreator;
 
 import com.getcapacitor.BridgeActivity;
 

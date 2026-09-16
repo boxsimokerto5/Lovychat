@@ -4,14 +4,18 @@ File signature key (release keystore) telah berhasil dibuat dan dikonfigurasi un
 
 ---
 
-## 1. Detail Signature Key (Keystore)
+## 1. Detail Identitas Aplikasi & Signature Key (Keystore)
 
 | Parameter | Nilai |
 | :--- | :--- |
+| **Package Name / Application ID** | `com.lovychat.gecckocreator` |
+| **Version Name** | `1.0.0` |
+| **Version Code** | `1` (siap untuk update bertahap di Play Store: 2, 3, dst.) |
 | **Nama File Keystore** | `release.keystore` (tersimpan di `android/app/release.keystore`) |
 | **Keystore Password (Storepass)** | `lovychat123` |
 | **Key Alias** | `lovychat` |
 | **Key Password** | `lovychat123` |
+| **Distinguished Name (DName)** | `CN=LovyChat, OU=gecckocreator, O=LovyChat, C=ID` |
 | **Algoritma & Ukuran** | RSA 2048-bit (valid 10.000 hari) |
 | **Tipe Keystore** | PKCS#12 (Standar industri Android & Google Play) |
 

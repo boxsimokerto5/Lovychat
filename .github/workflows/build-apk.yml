@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout Code
+      - name: Checkout Repository
         uses: actions/checkout@v4
 
       - name: Set up Java JDK 17
@@ -22,7 +22,10 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Set up Node.js
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Set up Node.js 20
         uses: actions/setup-node@v4
         with:
           node-version: '20'
@@ -55,24 +58,24 @@ jobs:
             echo "Decoding Keystore from GitHub Secret..."
             echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
           elif [ -f "android/app/release.keystore" ]; then
-            echo "Using pre-configured release.keystore in repository..."
+            echo "Using pre-configured release.keystore in android/app/..."
           elif [ -f "release.keystore" ]; then
             cp release.keystore android/app/release.keystore
-            echo "Using release.keystore from root directory..."
+            echo "Copied release.keystore from root..."
           else
-            echo "Generating fallback release keystore..."
-            keytool -genkey -v -keystore android/app/release.keystore \
+            echo "Generating fresh release keystore via keytool..."
+            keytool -genkeypair -v -keystore android/app/release.keystore \
               -alias lovychat -keyalg RSA -keysize 2048 -validity 10000 \
               -storepass lovychat123 -keypass lovychat123 \
-              -dname "CN=LovyChat, OU=Mobile, O=LovyChat, L=Surabaya, ST=JawaTimur, C=ID"
+              -dname "CN=LovyChat, OU=gecckocreator, O=LovyChat, L=Surabaya, ST=JawaTimur, C=ID"
           fi
           ls -lh android/app/release.keystore
 
-      - name: Grant Execute Permission for Gradlew
+      - name: Grant Execute Permission to Gradlew
         run: |
           chmod +x android/gradlew
 
-      - name: Build Signed APK (Direct Installation)
+      - name: Build Signed APK (Direct Device Installation)
         working-directory: ./android
         env:
           KEYSTORE_PATH: release.keystore
@@ -80,7 +83,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew assembleRelease --no-daemon
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Build Signed AAB (Google Play Store Bundle)
         working-directory: ./android
@@ -90,22 +93,22 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew bundleRelease --no-daemon
+          ./gradlew bundleRelease --no-daemon --stacktrace
 
-      - name: Organize Artifacts
+      - name: Collect & Organize Artifacts
         run: |
           mkdir -p build-outputs
           # Find APK
           APK_FILE=$(find android/app/build/outputs/apk/release -name "*.apk" | head -n 1)
           if [ -n "$APK_FILE" ]; then
             cp "$APK_FILE" build-outputs/LovyChat-release.apk
-            echo "APK ready at build-outputs/LovyChat-release.apk"
+            echo "Found APK: $APK_FILE -> copied to build-outputs/LovyChat-release.apk"
           fi
           # Find AAB
           AAB_FILE=$(find android/app/build/outputs/bundle/release -name "*.aab" | head -n 1)
           if [ -n "$AAB_FILE" ]; then
             cp "$AAB_FILE" build-outputs/LovyChat-release.aab
-            echo "AAB ready at build-outputs/LovyChat-release.aab"
+            echo "Found AAB: $AAB_FILE -> copied to build-outputs/LovyChat-release.aab"
           fi
           ls -lh build-outputs/
 
@@ -114,11 +117,9 @@ jobs:
         with:
           name: LovyChat-Release-APK
           path: build-outputs/LovyChat-release.apk
-          if-no-files-found: error
 
       - name: Upload AAB Artifact (Google Play Store)
         uses: actions/upload-artifact@v4
         with:
           name: LovyChat-PlayStore-AAB
           path: build-outputs/LovyChat-release.aab
-          if-no-files-found: error
