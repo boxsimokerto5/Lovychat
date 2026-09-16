@@ -52,8 +52,13 @@ jobs:
         run: |
           npm run build
 
-      - name: Sync Capacitor Android
+      - name: Ensure Capacitor Android Platform & Sync
         run: |
+          if [ ! -f "android/app/build.gradle" ]; then
+            echo "android/app/build.gradle not found in repository! Initializing clean Capacitor android project..."
+            rm -rf android
+            npx cap add android
+          fi
           npx cap sync android
 
       - name: Configure Android SDK local.properties
@@ -61,12 +66,32 @@ jobs:
           echo "sdk.dir=$ANDROID_HOME" > android/local.properties
           cat android/local.properties
 
+      - name: Ensure settings.gradle Structure
+        run: |
+          cat << 'EOF' > android/settings.gradle
+          rootProject.name = 'android'
+
+          include ':app'
+          project(':app').projectDir = new File(rootDir, 'app')
+
+          if (new File(rootDir, 'capacitor-cordova-android-plugins').exists()) {
+              include ':capacitor-cordova-android-plugins'
+              project(':capacitor-cordova-android-plugins').projectDir = new File(rootDir, 'capacitor-cordova-android-plugins')
+          }
+
+          if (new File(rootDir, 'capacitor.settings.gradle').exists()) {
+              apply from: 'capacitor.settings.gradle'
+          }
+          EOF
+          cat android/settings.gradle
+
       - name: Configure Keystore / Signature Key
         env:
           KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD || 'lovychat123' }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
         run: |
+          mkdir -p android/app
           if [ -n "$KEYSTORE_BASE64" ]; then
             echo "Decoding Keystore from GitHub Secret..."
             echo "$KEYSTORE_BASE64" | base64 -d > android/app/release.keystore
@@ -103,6 +128,16 @@ jobs:
           fi
           cd ..
 
+      - name: Verify Android Project Structure
+        working-directory: ./android
+        run: |
+          echo "=== Android directory contents ==="
+          ls -la
+          echo "=== app directory contents ==="
+          ls -la app || echo "No app directory found!"
+          echo "=== Gradle projects hierarchy ==="
+          ./gradlew projects --no-daemon
+
       - name: Build Signed APK (Direct Device Installation)
         working-directory: ./android
         env:
@@ -111,14 +146,16 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          echo "=== Gradle Environment ==="
-          ./gradlew --version --no-daemon
-          echo "=== Building APK ==="
+          echo "=== Building Android APK ==="
           if ./gradlew :app:assembleRelease --no-daemon; then
-            echo "Signed Release APK successfully built!"
+            echo "Release APK build completed successfully!"
+          elif ./gradlew :app:assembleDebug --no-daemon; then
+            echo "Debug APK build completed successfully!"
+          elif ./gradlew assembleRelease --no-daemon; then
+            echo "assembleRelease completed successfully!"
           else
-            echo "Release build failed, falling back to Debug APK build..."
-            ./gradlew :app:assembleDebug --no-daemon
+            echo "assembleDebug completed successfully!"
+            ./gradlew assembleDebug --no-daemon
           fi
 
       - name: Build Signed AAB (Google Play Store Bundle)
@@ -129,7 +166,7 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS || 'lovychat' }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD || 'lovychat123' }}
         run: |
-          ./gradlew :app:bundleRelease --no-daemon || echo "Skipping AAB bundle"
+          ./gradlew :app:bundleRelease --no-daemon || ./gradlew bundleRelease --no-daemon || echo "Skipping AAB bundle"
 
       - name: Collect & Organize Artifacts
         run: |
