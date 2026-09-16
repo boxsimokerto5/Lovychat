@@ -1,10 +1,34 @@
 import { ChatConversation, ChatMessage, MomentPost, BottleMessage, UserProfile } from '../types';
 
+const LIVE_BACKEND_URL = 'https://ais-pre-qv5xunkuvf5tmbxnxj5xj7-854045254855.asia-southeast1.run.app';
+
+export const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined') {
+    const hostname = window.location.hostname;
+    // When running inside Capacitor native Android/iOS app or local filesystem
+    if (
+      hostname === 'localhost' ||
+      hostname === '127.0.0.1' ||
+      window.location.protocol === 'capacitor:' ||
+      window.location.protocol === 'file:'
+    ) {
+      return LIVE_BACKEND_URL;
+    }
+  }
+  return '';
+};
+
+export async function apiFetch(path: string, options?: RequestInit): Promise<Response> {
+  const baseUrl = getApiBaseUrl();
+  const url = path.startsWith('http') ? path : `${baseUrl}${path}`;
+  return await fetch(url, options);
+}
+
 export const api = {
   // Users
   async getUsers(): Promise<UserProfile[]> {
     try {
-      const res = await fetch('/api/users');
+      const res = await apiFetch('/api/users');
       if (!res.ok) return [];
       return await res.json();
     } catch {
@@ -13,7 +37,7 @@ export const api = {
   },
 
   async getUser(uid: string): Promise<UserProfile | null> {
-    const res = await fetch(`/api/users/${encodeURIComponent(uid)}`);
+    const res = await apiFetch(`/api/users/${encodeURIComponent(uid)}`);
     if (!res.ok) {
       if (res.status === 404) return null;
       throw new Error('Gagal memuat detail pengguna.');
@@ -22,7 +46,7 @@ export const api = {
   },
 
   async syncProfile(profile: Partial<UserProfile>): Promise<UserProfile> {
-    const res = await fetch('/api/auth/sync', {
+    const res = await apiFetch('/api/auth/sync', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(profile),
@@ -33,7 +57,7 @@ export const api = {
   },
 
   async blockOrUnblockUser(userUid: string, targetUid: string, action: 'block' | 'unblock') {
-    const res = await fetch('/api/auth/block', {
+    const res = await apiFetch('/api/auth/block', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userUid, targetUid, action }),
@@ -44,7 +68,7 @@ export const api = {
 
   async logoutCleanup(uid: string) {
     try {
-      await fetch('/api/auth/logout', {
+      await apiFetch('/api/auth/logout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ uid }),
@@ -60,7 +84,7 @@ export const api = {
       return [];
     }
     try {
-      const res = await fetch(`/api/chats?userUid=${encodeURIComponent(userUid)}`);
+      const res = await apiFetch(`/api/chats?userUid=${encodeURIComponent(userUid)}`);
       if (!res.ok) return [];
       return await res.json();
     } catch {
@@ -75,7 +99,7 @@ export const api = {
     lastMessage?: string;
     lastSenderId?: string;
   }): Promise<ChatConversation> {
-    const res = await fetch('/api/chats', {
+    const res = await apiFetch('/api/chats', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -86,7 +110,7 @@ export const api = {
 
   async markChatRead(chatId: string, userUid: string) {
     try {
-      await fetch(`/api/chats/${encodeURIComponent(chatId)}/read`, {
+      await apiFetch(`/api/chats/${encodeURIComponent(chatId)}/read`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userUid }),
@@ -98,7 +122,7 @@ export const api = {
 
   async getTypingStatus(chatId: string, excludeUid: string): Promise<{ isTyping: boolean; typingUserIds: string[] }> {
     try {
-      const res = await fetch(`/api/chats/${encodeURIComponent(chatId)}/typing?excludeUid=${encodeURIComponent(excludeUid)}`);
+      const res = await apiFetch(`/api/chats/${encodeURIComponent(chatId)}/typing?excludeUid=${encodeURIComponent(excludeUid)}`);
       if (!res.ok) return { isTyping: false, typingUserIds: [] };
       return await res.json();
     } catch {
@@ -108,7 +132,7 @@ export const api = {
 
   async setTypingStatus(chatId: string, userUid: string, isTyping: boolean): Promise<void> {
     try {
-      await fetch(`/api/chats/${encodeURIComponent(chatId)}/typing`, {
+      await apiFetch(`/api/chats/${encodeURIComponent(chatId)}/typing`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userUid, isTyping }),
@@ -122,7 +146,7 @@ export const api = {
   async getMessages(conversationId: string): Promise<ChatMessage[]> {
     if (!conversationId) return [];
     try {
-      const res = await fetch(`/api/messages?conversationId=${encodeURIComponent(conversationId)}`);
+      const res = await apiFetch(`/api/messages?conversationId=${encodeURIComponent(conversationId)}`);
       if (!res.ok) return [];
       return await res.json();
     } catch {
@@ -139,7 +163,7 @@ export const api = {
     senderName?: string;
     senderAvatar?: string;
   }): Promise<ChatMessage> {
-    const res = await fetch('/api/messages', {
+    const res = await apiFetch('/api/messages', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
@@ -151,7 +175,7 @@ export const api = {
   // Moments
   async getMoments(): Promise<MomentPost[]> {
     try {
-      const res = await fetch('/api/moments');
+      const res = await apiFetch('/api/moments');
       if (!res.ok) return [];
       return await res.json();
     } catch {
@@ -167,7 +191,7 @@ export const api = {
     imageUrl?: string | null;
     location?: string | null;
   }): Promise<MomentPost> {
-    const res = await fetch('/api/moments', {
+    const res = await apiFetch('/api/moments', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(momentData),
@@ -177,7 +201,7 @@ export const api = {
   },
 
   async deleteMoment(momentId: string | number, userUid: string) {
-    const res = await fetch(`/api/moments/${momentId}?userUid=${encodeURIComponent(userUid)}`, {
+    const res = await apiFetch(`/api/moments/${momentId}?userUid=${encodeURIComponent(userUid)}`, {
       method: 'DELETE',
     });
     if (!res.ok) throw new Error('Gagal menghapus Momen.');
@@ -185,7 +209,7 @@ export const api = {
   },
 
   async likeMoment(momentId: string | number, userUid: string) {
-    const res = await fetch(`/api/moments/${momentId}/like`, {
+    const res = await apiFetch(`/api/moments/${momentId}/like`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ userUid }),
@@ -200,7 +224,7 @@ export const api = {
     userAvatar: string;
     text: string;
   }) {
-    const res = await fetch(`/api/moments/${momentId}/comment`, {
+    const res = await apiFetch(`/api/moments/${momentId}/comment`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(comment),
@@ -212,7 +236,7 @@ export const api = {
   // Drift Bottles
   async getBottles(): Promise<BottleMessage[]> {
     try {
-      const res = await fetch('/api/bottles');
+      const res = await apiFetch('/api/bottles');
       if (!res.ok) return [];
       return await res.json();
     } catch {
@@ -227,7 +251,7 @@ export const api = {
     senderGender: string;
     content: string;
   }): Promise<BottleMessage> {
-    const res = await fetch('/api/bottles', {
+    const res = await apiFetch('/api/bottles', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
