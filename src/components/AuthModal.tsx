@@ -21,6 +21,8 @@ import {
 } from 'lucide-react';
 import { getAuthErrorMessage } from '../utils/authErrors';
 import { GoogleAccountPickerModal } from './GoogleAccountPickerModal';
+import { Capacitor } from '@capacitor/core';
+import { pickDeviceGoogleAccount } from '../utils/nativeGoogleAuth';
 
 export const AuthModal: React.FC = () => {
   const { 
@@ -130,9 +132,29 @@ export const AuthModal: React.FC = () => {
     }
   };
 
-  const handleGoogleSignIn = () => {
+  const handleGoogleSignIn = async () => {
     setError(null);
     setSuccessNotice(null);
+
+    // Di Android APK, buka langsung dialog sistem Android untuk memilih akun Google perangkat
+    if (Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android') {
+      try {
+        setGoogleSubmitting(true);
+        const chosenEmail = await pickDeviceGoogleAccount();
+        if (chosenEmail) {
+          await loginWithGoogle(chosenEmail);
+        }
+      } catch (err: any) {
+        console.warn('Native Google account picker status:', err);
+        // Jika ada kendala pada sistem dialog, tampilkan lembar fallback
+        setShowGooglePicker(true);
+      } finally {
+        setGoogleSubmitting(false);
+      }
+      return;
+    }
+
+    // Di browser web / pratinjau desktop
     setShowGooglePicker(true);
   };
 

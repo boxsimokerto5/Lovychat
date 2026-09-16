@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import { SavedAccount } from '../context/AuthContext';
-import { Check, Plus, User, X, ChevronRight, Sparkles } from 'lucide-react';
+import { Plus, User, X, ChevronRight, Smartphone } from 'lucide-react';
+import { Capacitor } from '@capacitor/core';
+import { pickDeviceGoogleAccount } from '../utils/nativeGoogleAuth';
 
 interface GoogleAccountPickerModalProps {
   isOpen: boolean;
@@ -24,30 +26,41 @@ export const GoogleAccountPickerModal: React.FC<GoogleAccountPickerModalProps> =
 
   if (!isOpen) return null;
 
-  // Primary detected device Google account
-  const defaultGoogleAccount = {
-    email: 'satesurabaya1101@gmail.com',
-    displayName: 'Sate Surabaya',
-    photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=200&auto=format&fit=crop&q=80',
-  };
-
-  // Additional Gmail accounts from saved history
-  const otherGmailAccounts = savedAccounts.filter(
-    acc => acc.email.toLowerCase().endsWith('@gmail.com') && 
-           acc.email.toLowerCase() !== defaultGoogleAccount.email.toLowerCase()
+  // Filter existing saved accounts
+  const googleAccounts = savedAccounts.filter(
+    acc => acc.email && acc.email.toLowerCase().includes('@')
   );
 
-  const handlePickAccount = async (email: string, name: string, photo?: string) => {
+  const handlePickAccount = async (email: string, name?: string, photo?: string) => {
     if (isProcessing) return;
-    setSelectedEmail(email);
+    const cleanEmail = email.trim().toLowerCase();
+    setSelectedEmail(cleanEmail);
     setIsProcessing(true);
     setInputError(null);
     try {
-      await onSelectAccount(email, name, photo);
+      const derivedName = name?.trim() || cleanEmail.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+      await onSelectAccount(cleanEmail, derivedName, photo);
       onClose();
     } catch (err: any) {
       console.warn('Google account selection notice:', err);
       setInputError(err?.message || 'Gagal masuk dengan akun Google.');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleNativeDevicePicker = async () => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    setInputError(null);
+    try {
+      const chosenEmail = await pickDeviceGoogleAccount();
+      if (chosenEmail) {
+        await handlePickAccount(chosenEmail);
+      }
+    } catch (err: any) {
+      console.warn('Gagal memanggil native picker:', err);
+      setInputError(err?.message || 'Tidak dapat membuka daftar akun dari HP.');
     } finally {
       setIsProcessing(false);
     }
@@ -61,9 +74,10 @@ export const GoogleAccountPickerModal: React.FC<GoogleAccountPickerModalProps> =
       return;
     }
     const finalEmail = clean.includes('@') ? clean : `${clean}@gmail.com`;
-    const derivedName = customName.trim() || finalEmail.split('@')[0].replace(/[._-]+/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-    handlePickAccount(finalEmail, derivedName);
+    handlePickAccount(finalEmail, customName.trim());
   };
+
+  const isAndroidApp = Capacitor.isNativePlatform() && Capacitor.getPlatform() === 'android';
 
   return (
     <div 
@@ -123,55 +137,41 @@ export const GoogleAccountPickerModal: React.FC<GoogleAccountPickerModalProps> =
         </div>
 
         {/* Account List */}
-        <div className="p-4 space-y-2 overflow-y-auto flex-1">
+        <div className="p-4 space-y-2.5 overflow-y-auto flex-1">
           {inputError && (
             <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-700 font-medium animate-in fade-in">
               {inputError}
             </div>
           )}
 
-          {/* Primary Device Account */}
-          <button
-            type="button"
-            id="google-account-primary"
-            disabled={isProcessing}
-            onClick={() => handlePickAccount(defaultGoogleAccount.email, defaultGoogleAccount.displayName, defaultGoogleAccount.photoUrl)}
-            className="w-full text-left p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-500 hover:bg-emerald-50/40 active:bg-slate-100 transition flex items-center justify-between group disabled:opacity-50"
-          >
-            <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-full bg-blue-600 text-white font-bold text-base flex items-center justify-center shadow-xs shrink-0 overflow-hidden ring-2 ring-blue-100">
-                {defaultGoogleAccount.photoUrl ? (
-                  <img 
-                    src={defaultGoogleAccount.photoUrl} 
-                    alt={defaultGoogleAccount.displayName}
-                    className="w-full h-full object-cover"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  defaultGoogleAccount.displayName.charAt(0).toUpperCase()
-                )}
+          {/* If on Android, show prominent native device account selector button */}
+          {isAndroidApp && (
+            <button
+              type="button"
+              id="btn-pick-from-device-native"
+              disabled={isProcessing}
+              onClick={handleNativeDevicePicker}
+              className="w-full text-left p-3.5 rounded-2xl bg-emerald-50/70 border border-emerald-300 hover:border-emerald-500 hover:bg-emerald-100/60 active:bg-emerald-200/50 transition flex items-center justify-between group disabled:opacity-50 shadow-xs"
+            >
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-10 h-10 rounded-full bg-emerald-600 text-white flex items-center justify-center shadow-xs shrink-0 ring-2 ring-emerald-200">
+                  <Smartphone className="w-5 h-5" />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-bold text-emerald-950 truncate">
+                    Buka Daftar Akun di HP Ini
+                  </p>
+                  <p className="text-xs text-emerald-700 truncate">
+                    Pilih langsung dari akun Google perangkat Anda
+                  </p>
+                </div>
               </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-slate-800 truncate group-hover:text-emerald-700">
-                  {defaultGoogleAccount.displayName}
-                </p>
-                <p className="text-xs text-slate-500 truncate">
-                  {defaultGoogleAccount.email}
-                </p>
-              </div>
-            </div>
+              <ChevronRight className="w-4 h-4 text-emerald-600 shrink-0" />
+            </button>
+          )}
 
-            {selectedEmail === defaultGoogleAccount.email && isProcessing ? (
-              <div className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin shrink-0" />
-            ) : (
-              <div className="w-6 h-6 rounded-full bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center shrink-0 transition">
-                <ChevronRight className="w-3.5 h-3.5 text-slate-400 group-hover:text-emerald-600" />
-              </div>
-            )}
-          </button>
-
-          {/* Additional saved accounts */}
-          {otherGmailAccounts.map((acc, index) => (
+          {/* Saved accounts in the app */}
+          {googleAccounts.map((acc, index) => (
             <button
               key={acc.email || index}
               type="button"
@@ -229,7 +229,7 @@ export const GoogleAccountPickerModal: React.FC<GoogleAccountPickerModalProps> =
             </button>
           ) : (
             <form onSubmit={handleCustomSubmit} className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 space-y-2.5 animate-in fade-in">
-              <p className="text-xs font-bold text-slate-700">Masukkan Akun Google Baru</p>
+              <p className="text-xs font-bold text-slate-700">Masukkan Akun Google Lain</p>
               <div>
                 <label className="block text-[10px] font-semibold text-slate-500 mb-0.5">Email Google (@gmail.com)</label>
                 <input

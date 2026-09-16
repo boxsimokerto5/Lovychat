@@ -38,6 +38,7 @@
     </application>
 
     <!-- Permissions -->
+    <uses-permission android:name="android.permission.GET_ACCOUNTS" />
 
     <!-- Network & Internet -->
     <uses-permission android:name="android.permission.INTERNET" />
